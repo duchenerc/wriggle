@@ -15,40 +15,40 @@ class Board
 {
 public:
 
-	struct Move
-	{
-		int mSnakeIdx;
-		Snake::SnakePart mSnakePart;
-		Direction mDirection;
-	};
+   struct Move
+   {
+      int mSnakeIdx;
+      Snake::SnakePart mSnakePart;
+      Direction mDirection;
+   };
 
-	Board() = default;
+   Board() = default;
 
-	bool IsLocationEmpty(const Location& aLocation) const;
-	bool IsLocationInside(const Location& aLocation) const;
+   bool IsLocationEmpty(const Location& aLocation) const;
+   bool IsLocationInside(const Location& aLocation) const;
 
-	std::unique_ptr<std::list<Move>> LegalMoves() const;
-	void MakeMove(const Move& aMove);
+   std::unique_ptr<std::list<Move>> LegalMoves() const;
+   void MakeMove(const Move& aMove);
 
 private:
-	Location mSize;
-	std::vector<Snake> mSnakes;
-	std::set<Location> mWalls;
+   Location mSize;
+   std::vector<Snake> mSnakes;
+   std::set<Location> mWalls;
 
 public:
-	class Builder
-	{
-	public:
-		Builder()
-			: mBoardPtr{ std::make_unique<Board>() }
-		{}
+   class Builder
+   {
+   public:
+      Builder()
+         : mBoardPtr{ std::make_unique<Board>() }
+      {}
 
-		std::unique_ptr<Board> Build();
-		void FromStream(std::istream& aIn);
+      std::unique_ptr<Board> Build();
+      void FromStream(std::istream& aIn);
 
-	private:
-		std::unique_ptr<Board> mBoardPtr;
-	};
+   private:
+      std::unique_ptr<Board> mBoardPtr;
+   };
 };
 
 #endif

@@ -10,40 +10,40 @@
 class Snake
 {
 public:
-	enum class SnakePart
-	{
-		Head,
-		Tail
-	};
+   enum class SnakePart
+   {
+      Head,
+      Tail
+   };
 
-	Snake() = default;
+   Snake() = default;
 
-	int GetIdx() const { return mIdx; }
-	bool OccupiesLocation(const Location& aLocation) const;
-	const Location& GetPartLocation(const SnakePart aPart) const;
+   int GetIdx() const { return mIdx; }
+   bool OccupiesLocation(const Location& aLocation) const;
+   const Location& GetPartLocation(const SnakePart aPart) const;
 
-	void MakeMove(const SnakePart aPart, const Direction aDirection);
+   void MakeMove(const SnakePart aPart, const Direction aDirection);
 
 private:
-	std::deque<Location> mBody;
-	int mIdx = 0;
+   std::deque<Location> mBody;
+   int mIdx = 0;
 
 public:
-	class Builder
-	{
-	public:
-		Builder()
-			: mSnakePtr{ std::make_unique<Snake>() }
-		{}
+   class Builder
+   {
+   public:
+      Builder()
+         : mSnakePtr{ std::make_unique<Snake>() }
+      {}
 
-		void SetHead(const Location& aLoc);
-		void AddSegment(const Direction aDirection);
-		void SetIndex(const int aIdx);
-		std::unique_ptr<Snake> Build();
+      void SetHead(const Location& aLoc);
+      void AddSegment(const Direction aDirection);
+      void SetIndex(const int aIdx);
+      std::unique_ptr<Snake> Build();
 
-	private:
-		std::unique_ptr<Snake> mSnakePtr;
-	};
+   private:
+      std::unique_ptr<Snake> mSnakePtr;
+   };
 };
 
 #endif
