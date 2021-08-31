@@ -10,6 +10,7 @@
 class Snake
 {
 public:
+   using const_iterator = std::deque<Location>::const_iterator;
    enum class SnakePart
    {
       Head,
@@ -17,6 +18,9 @@ public:
    };
 
    Snake() = default;
+
+   const_iterator cbegin() const noexcept { return mBody.cbegin(); }
+   const_iterator cend() const noexcept { return mBody.cend(); }
 
    int GetIdx() const { return mIdx; }
    bool OccupiesLocation(const Location& aLocation) const;

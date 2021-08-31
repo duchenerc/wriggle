@@ -19,6 +19,11 @@ public:
    Location() = default;
    Location(const int aX, const int aY) : mX{ aX }, mY{ aY } {};
 
+   static const Location Up;
+   static const Location Right;
+   static const Location Down;
+   static const Location Left;
+
    int GetX() const
    {
       return mX;

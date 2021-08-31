@@ -18,7 +18,7 @@ enum class BoardInput
 
    BodyUp = '^',
    BodyRight = '>',
-   BodyDown = 'V',
+   BodyDown = 'v',
    BodyLeft = '<'
 };
 
@@ -217,4 +217,83 @@ void Board::Builder::FromStream(std::istream& aIn)
 Board Board::Builder::Build()
 {
    return *mBoardPtr;
+}
+
+void Board::PrintToStream(std::ostream& aOut) const
+{
+   std::unordered_map<Location, char> output;
+
+   auto UnitLocToOutput = [](const Location& aLoc, bool aIsHead = false) -> BoardInput
+   {
+      BoardInput out;
+      if (aLoc == Location::Up)
+      {
+         out = aIsHead ? BoardInput::HeadUp : BoardInput::BodyUp;
+      }
+      else if (aLoc == Location::Right)
+      {
+         out = aIsHead ? BoardInput::HeadRight : BoardInput::BodyRight;
+      }
+      else if (aLoc == Location::Down)
+      {
+         out = aIsHead ? BoardInput::HeadDown : BoardInput::BodyDown;
+      }
+      else if (aLoc == Location::Left)
+      {
+         out = aIsHead ? BoardInput::HeadLeft : BoardInput::BodyLeft;
+      }
+      else
+      {
+         // should never reach
+         out = BoardInput::Wall;
+      }
+
+      return out;
+   };
+
+   // write walls
+   for (const auto& wall : mWalls)
+   {
+      output[wall] = static_cast<char>(BoardInput::Wall);
+   }
+
+   // write snakes
+   for (const auto& snake : mSnakes)
+   {
+      auto it = snake.cbegin();
+      auto jt = std::next(it);
+      Location nextUnitLoc = *jt - *it;
+      output[*it] = static_cast<char>(UnitLocToOutput(nextUnitLoc, true));
+      ++it;
+      ++jt;
+      while (jt != snake.cend())
+      {
+         nextUnitLoc = *jt - *it;
+         output[*it] = static_cast<char>(UnitLocToOutput(nextUnitLoc, false));
+         ++it;
+         ++jt;
+      }
+      output[*it] = static_cast<char>(snake.GetIdx() + ASCII_ZERO);
+   }
+
+   int width = mSize.GetX();
+   int height = mSize.GetY();
+   Location loc;
+   for (int j = 0; j < height; ++j)
+   {
+      for (int i = 0; i < width; ++i)
+      {
+         loc = { i, j };
+         if (output.count(loc))
+         {
+            aOut << output[loc] << " ";
+         }
+         else
+         {
+            aOut << static_cast<char>(BoardInput::EmptySpace) << " ";
+         }
+      }
+      aOut << std::endl;
+   }
+
 }

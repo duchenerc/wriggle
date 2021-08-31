@@ -25,6 +25,7 @@ public:
    };
 
    Board() = default;
+   Board(const Board& aRhs) = default;
 
    bool IsLocationEmpty(const Location& aLocation) const;
    bool IsLocationInside(const Location& aLocation) const;
@@ -39,6 +40,8 @@ public:
    size_t Hash() const;
 
    bool operator==(const Board& aRhs) const;
+
+   void PrintToStream(std::ostream& aOut) const;
 
 private:
    Location mSize;

@@ -1,6 +1,11 @@
 
 #include "Location.hpp"
 
+const Location Location::Up    = {  0, -1 };
+const Location Location::Right = {  1,  0 };
+const Location Location::Down  = {  0,  1 };
+const Location Location::Left  = { -1,  0 };
+
 Location Location::operator+(const Location& aRhs) const
 {
    return Location{ mX + aRhs.mX, mY + aRhs.mY };
@@ -40,17 +45,17 @@ Location Location::Nudge(const Direction aDir) const
    switch (aDir)
    {
    case Direction::Up:
-      return *this + Location{ 0, -1 };
+      return *this + Location::Up;
       break;
    case Direction::Right:
-      return *this + Location{ 1, 0 };
+      return *this + Location::Right;
       break;
    case Direction::Down:
-      return *this + Location{ 0, 1 };
+      return *this + Location::Down;
       break;
    case Direction::Left:
    default:
-      return *this + Location{ -1, 0 };
+      return *this + Location::Left;
       break;
    }
 }

@@ -8,3 +8,4 @@
 #include <string>
 
 #include "Board.hpp"
+#include "Solver.hpp"
