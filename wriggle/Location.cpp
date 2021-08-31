@@ -35,16 +35,6 @@ bool Location::operator!=(const Location& aRhs) const
    return mX != aRhs.mX || mY != aRhs.mY;
 }
 
-bool Location::operator<(const Location& aRhs) const
-{
-   return mX < aRhs.mX && mY < aRhs.mY;
-}
-
-bool Location::operator>=(const Location& aRhs) const
-{
-   return mX >= aRhs.mX && mY >= aRhs.mY;
-}
-
 Location Location::Nudge(const Direction aDir) const
 {
    switch (aDir)
@@ -67,5 +57,5 @@ Location Location::Nudge(const Direction aDir) const
 
 size_t Location::Hash() const
 {
-   return mX ^ (mY << 8);
+   return mX ^ (mY << 3);
 }

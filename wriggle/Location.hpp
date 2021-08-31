@@ -47,9 +47,6 @@ public:
    bool operator==(const Location& aRhs) const;
    bool operator!=(const Location& aRhs) const;
 
-   bool operator<(const Location& aRhs) const;
-   bool operator>=(const Location& aRhs) const;
-
    Location Nudge(const Direction aDir) const;
    size_t Hash() const;
 

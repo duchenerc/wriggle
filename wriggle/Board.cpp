@@ -58,6 +58,13 @@ constexpr Direction NextDirection(const BoardInput aInput)
 }
 }
 
+bool Board::Move::operator==(const Board::Move& aRhs) const
+{
+   return mSnakeIdx == aRhs.mSnakeIdx
+      && mDirection == aRhs.mDirection
+      && mSnakePart == aRhs.mSnakePart;
+}
+
 bool Board::IsLocationEmpty(const Location& aLocation) const
 {
    // check snakes
@@ -75,12 +82,25 @@ bool Board::IsLocationEmpty(const Location& aLocation) const
 
 bool Board::IsLocationInside(const Location& aLocation) const
 {
-   return aLocation >= ORIGIN && aLocation < mSize;
+   int x = aLocation.GetX();
+   int y = aLocation.GetY();
+   return x >= 0 && x < mSize.GetX() && y >= 0 && y < mSize.GetY();
 }
 
-std::unique_ptr<std::list<Board::Move>> Board::LegalMoves() const
+const Location& Board::GetSnakePartLocation(const int aSnakeIdx, const Snake::SnakePart aSnakePart) const
 {
-   std::unique_ptr<std::list<Move>> validMoves;
+   return mSnakes[aSnakeIdx].GetPartLocation(aSnakePart);
+}
+
+bool Board::IsSolved() const
+{
+   return mSnakes[0].OccupiesLocation(mExit);
+}
+
+std::vector<Board::Move> Board::LegalMoves() const
+{
+   std::vector<Move> validMoves;
+   validMoves.reserve(2 * 3 * mSnakes.size());
 
    for (const auto& snake : mSnakes)
    {
@@ -91,18 +111,34 @@ std::unique_ptr<std::list<Board::Move>> Board::LegalMoves() const
             Location tryLoc = snake.GetPartLocation(part).Nudge(direction);
             if (IsLocationEmpty(tryLoc) && IsLocationInside(tryLoc))
             {
-               validMoves->push_back({ snake.GetIdx(), part, direction });
+               validMoves.push_back({ snake.GetIdx(), part, direction });
             }
          }
       }
    }
 
-   return std::move(validMoves);
+   return validMoves;
 }
 
 void Board::MakeMove(const Move& aMove)
 {
    mSnakes[aMove.mSnakeIdx].MakeMove(aMove.mSnakePart, aMove.mDirection);
+}
+
+size_t Board::Hash() const
+{
+   size_t hash = 0;
+   for (const auto& snake : mSnakes)
+   {
+      hash = snake.Hash() ^ (hash << 12);
+   }
+
+   return hash;
+}
+
+bool Board::operator==(const Board& aRhs) const
+{
+   return mSnakes == aRhs.mSnakes;
 }
 
 void Board::Builder::FromStream(std::istream& aIn)
@@ -130,12 +166,13 @@ void Board::Builder::FromStream(std::istream& aIn)
       }
 
       builder.SetIndex(static_cast<int>(textBoard.at(loc)) - ASCII_ZERO);
-      return *builder.Build();
+      return builder.Build();
    };
 
    aIn >> width;
    aIn >> height;
    mBoardPtr->mSize = { width, height };
+   mBoardPtr->mExit = { width - 1, height - 1 };
 
    aIn >> numSnakes;
    mBoardPtr->mSnakes.resize(numSnakes);
@@ -177,7 +214,7 @@ void Board::Builder::FromStream(std::istream& aIn)
 
 }
 
-std::unique_ptr<Board> Board::Builder::Build()
+Board Board::Builder::Build()
 {
-   return std::move(mBoardPtr);
+   return *mBoardPtr;
 }

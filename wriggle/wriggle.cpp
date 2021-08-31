@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
    builder.FromStream(fin);
    fin.close();
 
-   std::unique_ptr<Board> initial = builder.Build();
+   Board initial = builder.Build();
 
    return 0;
 }

@@ -41,6 +41,18 @@ void Snake::MakeMove(const Snake::SnakePart aPart, const Direction aDirection)
    }
 }
 
+size_t Snake::Hash() const
+{
+   size_t hashHead = GetPartLocation(SnakePart::Head).Hash();
+   size_t hashTail = GetPartLocation(SnakePart::Tail).Hash();
+   return hashHead ^ (hashTail << 6);
+}
+
+bool Snake::operator==(const Snake& aRhs) const
+{
+   return mBody == aRhs.mBody;
+}
+
 void Snake::Builder::SetHead(const Location& aLocation)
 {
    if (!mSnakePtr->mBody.empty())
@@ -60,7 +72,7 @@ void Snake::Builder::SetIndex(const int aIdx)
    mSnakePtr->mIdx = aIdx;
 }
 
-std::unique_ptr<Snake> Snake::Builder::Build()
+Snake Snake::Builder::Build()
 {
-   return std::move(mSnakePtr);
+   return *mSnakePtr;
 }

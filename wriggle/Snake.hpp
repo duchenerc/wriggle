@@ -24,6 +24,10 @@ public:
 
    void MakeMove(const SnakePart aPart, const Direction aDirection);
 
+   size_t Hash() const;
+
+   bool operator==(const Snake& aRhs) const;
+
 private:
    std::deque<Location> mBody;
    int mIdx = 0;
@@ -39,11 +43,23 @@ public:
       void SetHead(const Location& aLoc);
       void AddSegment(const Direction aDirection);
       void SetIndex(const int aIdx);
-      std::unique_ptr<Snake> Build();
+      Snake Build();
 
    private:
       std::unique_ptr<Snake> mSnakePtr;
    };
 };
+
+namespace std
+{
+template<>
+struct hash<Snake>
+{
+   size_t operator()(Snake const& aRhs) const
+   {
+      return aRhs.Hash();
+   }
+};
+}
 
 #endif
