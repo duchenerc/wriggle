@@ -6,6 +6,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -48,6 +49,24 @@ public:
    virtual void Solve() = 0;
 
 protected:
+   
+   class SearchNode
+   {
+   public:
+      SearchNode(SearchNode* aParentPtr, const Board::Move& aMove, Board& aBoard)
+         : mParentPtr{ aParentPtr }
+         , mParentMove{ aMove }
+         , mBoardPtr{ std::make_unique<Board>(aBoard) }
+         , mDepth{ mParentPtr ? mParentPtr->mDepth + 1 : 0 }
+      {}
+
+      SearchNode* mParentPtr;
+      Board::Move mParentMove;
+      std::unique_ptr<Board> mBoardPtr;
+      int mDepth;
+      std::unordered_map<Board::Move, std::unique_ptr<SearchNode>> mChildren;
+   };
+
    std::unique_ptr<Board> mInitialPtr;
    std::list<Board::Move> mMoves;
    std::unique_ptr<Board> mSolvedPtr;
@@ -70,24 +89,28 @@ public:
    void Solve() override;
 
 private:
-
-   class SearchNode
-   {
-   public:
-      SearchNode(SearchNode* aParent, const Board::Move& aMove, Board& aBoard)
-         : mParentPtr{ aParent }
-         , mParentMove{ aMove }
-         , mBoardPtr{ std::make_unique<Board>(aBoard) }
-      {}
-
-      SearchNode* mParentPtr;
-      Board::Move mParentMove;
-      std::unique_ptr<Board> mBoardPtr;
-      std::unordered_map<Board::Move, std::unique_ptr<SearchNode>> mChildren;
-   };
-
    std::unique_ptr<SearchNode> mInitialNodePtr;
    std::list<SearchNode*> mFrontier;
+   std::unordered_set<Board> mExplored;
+};
+
+class IterativeDeepeningDepthFirstTreeSearchSolver : public Solver
+{
+public:
+   IterativeDeepeningDepthFirstTreeSearchSolver() = delete;
+   IterativeDeepeningDepthFirstTreeSearchSolver(const Board& aInitial)
+      : Solver{ aInitial }
+   {}
+
+   virtual ~IterativeDeepeningDepthFirstTreeSearchSolver() = default;
+
+   void Solve() override;
+   
+private:
+   SearchNode* SolveToDepth(const int aMaxDepth);
+
+   std::unique_ptr<SearchNode> mInitialNodePtr;
+   std::stack<SearchNode*> mFrontier;
    std::unordered_set<Board> mExplored;
 };
 

@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
    fin.close();
 
    Board initial = builder.Build();
-   std::unique_ptr<Solver> solver = std::make_unique<BreadthFirstTreeSearchSolver>(initial);
+   std::unique_ptr<Solver> solver = std::make_unique<IterativeDeepeningDepthFirstTreeSearchSolver>(initial);
 
    solver->Exec();
    solver->PrintToStream(std::cout);

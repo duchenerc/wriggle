@@ -81,3 +81,68 @@ void BreadthFirstTreeSearchSolver::Solve()
       }
    }
 }
+
+void IterativeDeepeningDepthFirstTreeSearchSolver::Solve()
+{
+   int maxDepth = 0;
+   SearchNode* solutionPtr = nullptr;
+   while (!mSolved)
+   {
+      solutionPtr = SolveToDepth(maxDepth);
+      ++maxDepth;
+      mExplored.clear();
+   }
+
+   if (mSolved && solutionPtr)
+   {
+      mSolvedPtr = std::make_unique<Board>(*solutionPtr->mBoardPtr);
+      while (solutionPtr->mParentPtr)
+      {
+         mMoves.push_front(solutionPtr->mParentMove);
+         solutionPtr = solutionPtr->mParentPtr;
+      }
+   }
+}
+
+Solver::SearchNode* IterativeDeepeningDepthFirstTreeSearchSolver::SolveToDepth(const int aMaxDepth)
+{
+   mInitialNodePtr = std::make_unique<SearchNode>(nullptr, Board::Move{}, *mInitialPtr);
+   mFrontier.push(mInitialNodePtr.get());
+
+   SearchNode* currentPtr = nullptr;
+   while (!mFrontier.empty())
+   {
+      currentPtr = mFrontier.top();
+      mFrontier.pop();
+
+      if (currentPtr->mBoardPtr->IsSolved())
+      {
+         mSolved = true;
+         return currentPtr;
+      }
+      else if (mExplored.count(*currentPtr->mBoardPtr))
+      {
+         // this node has already been generated
+         continue;
+      }
+
+      mExplored.insert(*currentPtr->mBoardPtr);
+
+      if (currentPtr->mDepth >= aMaxDepth)
+      {
+         // this node is at the depth limit, don't generate children
+         continue;
+      }
+
+      std::vector<Board::Move> movesFromCurrent = currentPtr->mBoardPtr->LegalMoves();
+      for (const auto& move : movesFromCurrent)
+      {
+         auto nextNode = std::make_unique<SearchNode>(currentPtr, move, *currentPtr->mBoardPtr);
+         nextNode->mBoardPtr->MakeMove(move);
+         mFrontier.push(nextNode.get());
+         currentPtr->mChildren[move] = std::move(nextNode);
+      }
+   }
+
+   return nullptr;
+}
