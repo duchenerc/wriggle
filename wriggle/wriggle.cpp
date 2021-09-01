@@ -58,6 +58,8 @@ int main(int argc, char* argv[])
       solver = std::make_unique<GreedyBestFirstGraphSearchSolver>(initial);
       break;
    case 'a':
+      solver = std::make_unique<AStarSolver>(initial);
+      break;
    default:
       std::cout << "wriggle: solver not implemented yet, exiting" << std::endl;
       return 0;

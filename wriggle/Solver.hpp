@@ -156,4 +156,45 @@ private:
    std::priority_queue<SearchNode*, std::deque<SearchNode*>, Compare> mFrontier;
 };
 
+class AStarSolver : public Solver
+{
+public:
+   AStarSolver() = delete;
+   AStarSolver(const Board& aInitial)
+      : Solver{ aInitial }
+   {}
+
+   virtual ~AStarSolver() = default;
+
+   void Solve() override;
+
+protected:
+   class SearchNode : public Solver::SearchNode
+   {
+   public:
+      SearchNode(SearchNode* aParentPtr, const Board::Move& aMove, const Board& aBoard)
+         : Solver::SearchNode{ aParentPtr, aMove, aBoard }
+         , mHeuristicScore{ Heuristic(this) }
+      {}
+
+      int mHeuristicScore;
+   };
+
+   static int Heuristic(const SearchNode* aSearchNodePtr);
+
+   struct Compare
+   {
+      bool operator()(const SearchNode* aLhs, const SearchNode* aRhs) const
+      {
+         return aLhs->mHeuristicScore + aLhs->mDepth > aRhs->mHeuristicScore + aRhs->mDepth;
+      };
+   };
+
+private:
+
+   std::unique_ptr<SearchNode> mInitialNodePtr;
+   std::unordered_set<Board> mExplored;
+   std::priority_queue<SearchNode*, std::deque<SearchNode*>, Compare> mFrontier;
+};
+
 #endif
