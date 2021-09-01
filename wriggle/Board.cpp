@@ -67,17 +67,8 @@ bool Board::Move::operator==(const Board::Move& aRhs) const
 
 bool Board::IsLocationEmpty(const Location& aLocation) const
 {
-   // check snakes
-   for (const auto& snake : mSnakes)
-   {
-      if (snake.OccupiesLocation(aLocation))
-      {
-         return false;
-      }
-   }
-
-   // check walls
-   return mWalls.count(aLocation) == 0;
+   return !IsLocationOccupiedByWall(aLocation) && !IsLocationOccupiedBySnake(aLocation);
+   
 }
 
 bool Board::IsLocationInside(const Location& aLocation) const
@@ -85,6 +76,23 @@ bool Board::IsLocationInside(const Location& aLocation) const
    int x = aLocation.GetX();
    int y = aLocation.GetY();
    return x >= 0 && x < mSize.GetX() && y >= 0 && y < mSize.GetY();
+}
+
+bool Board::IsLocationOccupiedBySnake(const Location& aLocation) const
+{
+   for (const auto& snake : mSnakes)
+   {
+      if (snake.OccupiesLocation(aLocation))
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool Board::IsLocationOccupiedByWall(const Location& aLocation) const
+{
+   return mWalls.count(aLocation) > 0;
 }
 
 const Location& Board::GetSnakePartLocation(const int aSnakeIdx, const Snake::SnakePart aSnakePart) const

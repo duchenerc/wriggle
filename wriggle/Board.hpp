@@ -29,6 +29,8 @@ public:
 
    bool IsLocationEmpty(const Location& aLocation) const;
    bool IsLocationInside(const Location& aLocation) const;
+   bool IsLocationOccupiedBySnake(const Location& aLocation) const;
+   bool IsLocationOccupiedByWall(const Location& aLocation) const;
 
    const Location& GetSnakePartLocation(const int aSnakeIdx, const Snake::SnakePart aSnakePart) const;
    const Location& GetExitLocation() const;

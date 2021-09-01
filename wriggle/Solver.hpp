@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iostream>
 #include <list>
+#include <map>
 #include <memory>
 #include <queue>
 #include <stack>
@@ -180,21 +181,24 @@ protected:
       int mHeuristicScore;
    };
 
-   static int Heuristic(const SearchNode* aSearchNodePtr);
-
-   struct Compare
+   struct FrontierItem
    {
-      bool operator()(const SearchNode* aLhs, const SearchNode* aRhs) const
-      {
-         return aLhs->mHeuristicScore + aLhs->mDepth > aRhs->mHeuristicScore + aRhs->mDepth;
-      };
+      FrontierItem(const int aHeuristicScore, SearchNode* aSearchNodePtr)
+         : mHeuristicScore{ aHeuristicScore }
+         , mSearchNodePtr{ aSearchNodePtr }
+      {}
+
+      const int mHeuristicScore;
+      SearchNode* mSearchNodePtr;
    };
+
+   static int Heuristic(const SearchNode* aSearchNodePtr);
 
 private:
 
    std::unique_ptr<SearchNode> mInitialNodePtr;
    std::unordered_set<Board> mExplored;
-   std::priority_queue<SearchNode*, std::deque<SearchNode*>, Compare> mFrontier;
+   std::multimap<int, SearchNode*, std::less<int>, std::allocator<FrontierItem>> mFrontier;
 };
 
 #endif

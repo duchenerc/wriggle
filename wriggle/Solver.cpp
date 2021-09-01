@@ -1,6 +1,8 @@
 
 #include "Solver.hpp"
 
+#include <array>
+
 void Solver::Exec()
 {
    using std::chrono::system_clock;
@@ -193,7 +195,7 @@ void GreedyBestFirstGraphSearchSolver::Solve()
 int GreedyBestFirstGraphSearchSolver::Heuristic(const GreedyBestFirstGraphSearchSolver::SearchNode* aSearchNodePtr)
 {
    // simple heuristic:
-   // depth + distance to exit of closest snake end
+   // taxicab distance to exit for 0-snake
    const Location& exitLoc = aSearchNodePtr->mBoardPtr->GetExitLocation();
    Location diffHead = exitLoc - aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Head);
    Location diffTail = exitLoc - aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Tail);
@@ -204,13 +206,15 @@ int GreedyBestFirstGraphSearchSolver::Heuristic(const GreedyBestFirstGraphSearch
 void AStarSolver::Solve()
 {
    mInitialNodePtr = std::make_unique<SearchNode>(nullptr, Board::Move{}, *mInitialPtr);
-   mFrontier.push(mInitialNodePtr.get());
+   mFrontier.insert({ mInitialNodePtr->mHeuristicScore, mInitialNodePtr.get() });
 
    SearchNode* currentPtr = nullptr;
+   std::multimap<int, SearchNode*, std::less<int>, std::allocator<FrontierItem>>::iterator currentIt;
    while (!mFrontier.empty())
    {
-      currentPtr = mFrontier.top();
-      mFrontier.pop();
+      currentIt = mFrontier.begin();
+      currentPtr = currentIt->second;
+      mFrontier.erase(currentIt);
 
       if (currentPtr->mBoardPtr->IsSolved())
       {
@@ -228,7 +232,7 @@ void AStarSolver::Solve()
       {
          auto nextNode = std::make_unique<SearchNode>(currentPtr, move, *currentPtr->mBoardPtr);
          nextNode->mBoardPtr->MakeMove(move);
-         mFrontier.push(nextNode.get());
+         mFrontier.insert({ nextNode->mHeuristicScore, nextNode.get() });
          currentPtr->mChildren[move] = std::move(nextNode);
       }
    }
@@ -246,11 +250,37 @@ void AStarSolver::Solve()
 
 int AStarSolver::Heuristic(const AStarSolver::SearchNode* aSearchNodePtr)
 {
-   // simple heuristic:
-   // depth + distance to exit of closest snake end
+   // slightly more advanced heuristic:
+   // taxicab distance to exit for 0-snake + terrain penalty for adjacent spaces (1 for other snakes, 2 for walls)
    const Location& exitLoc = aSearchNodePtr->mBoardPtr->GetExitLocation();
-   Location diffHead = exitLoc - aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Head);
-   Location diffTail = exitLoc - aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Tail);
+   const Location& headLoc = aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Head);
+   const Location& tailLoc = aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Tail);
 
-   return std::min(diffHead.Taxicab(), diffTail.Taxicab());
+   auto FindExtraCost = [aSearchNodePtr](const Location& aLoc) -> int
+   {
+      const std::array<Location, 2> downright = { aLoc.Nudge(Direction::Down), aLoc.Nudge(Direction::Right) };
+      int extra = 2;
+
+      for (const auto& next : downright)
+      {
+         if (!aSearchNodePtr->mBoardPtr->IsLocationInside(next))
+         {
+            continue;
+         }
+         else if (aSearchNodePtr->mBoardPtr->IsLocationOccupiedBySnake(next))
+         {
+            extra = std::min(extra, 1);
+         }
+         else if (aSearchNodePtr->mBoardPtr->IsLocationEmpty(next))
+         {
+            extra = 0;
+         }
+      }
+      return extra;
+   };
+
+   int costHead = (exitLoc - headLoc).Taxicab() + FindExtraCost(headLoc);
+   int costTail = (exitLoc - tailLoc).Taxicab() + FindExtraCost(tailLoc);
+
+   return std::min(costHead, costTail) + aSearchNodePtr->mDepth;
 }
