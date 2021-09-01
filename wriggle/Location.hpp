@@ -53,6 +53,8 @@ public:
    bool operator!=(const Location& aRhs) const;
 
    Location Nudge(const Direction aDir) const;
+   int Taxicab() const;
+
    size_t Hash() const;
 
 private:

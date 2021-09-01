@@ -92,6 +92,11 @@ const Location& Board::GetSnakePartLocation(const int aSnakeIdx, const Snake::Sn
    return mSnakes[aSnakeIdx].GetPartLocation(aSnakePart);
 }
 
+const Location& Board::GetExitLocation() const
+{
+   return mExit;
+}
+
 bool Board::IsSolved() const
 {
    return mSnakes[0].OccupiesLocation(mExit);

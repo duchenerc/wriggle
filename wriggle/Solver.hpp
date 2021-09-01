@@ -6,6 +6,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <queue>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -53,7 +54,7 @@ protected:
    class SearchNode
    {
    public:
-      SearchNode(SearchNode* aParentPtr, const Board::Move& aMove, Board& aBoard)
+      SearchNode(SearchNode* aParentPtr, const Board::Move& aMove, const Board& aBoard)
          : mParentPtr{ aParentPtr }
          , mParentMove{ aMove }
          , mBoardPtr{ std::make_unique<Board>(aBoard) }
@@ -112,6 +113,47 @@ private:
    std::unique_ptr<SearchNode> mInitialNodePtr;
    std::stack<SearchNode*> mFrontier;
    std::unordered_set<Board> mExplored;
+};
+
+class GreedyBestFirstGraphSearchSolver : public Solver
+{
+public:
+   GreedyBestFirstGraphSearchSolver() = delete;
+   GreedyBestFirstGraphSearchSolver(const Board& aInitial)
+      : Solver{ aInitial }
+   {}
+
+   virtual ~GreedyBestFirstGraphSearchSolver() = default;
+
+   void Solve() override;
+
+protected:
+   class SearchNode : public Solver::SearchNode
+   {
+   public:
+      SearchNode(SearchNode* aParentPtr, const Board::Move& aMove, const Board& aBoard)
+         : Solver::SearchNode{ aParentPtr, aMove, aBoard }
+         , mHeuristicScore{ Heuristic(this) }
+      {}
+
+      int mHeuristicScore;
+   };
+
+   static int Heuristic(const SearchNode* aSearchNodePtr);
+
+   struct Compare
+   {
+      bool operator()(const SearchNode* aLhs, const SearchNode* aRhs) const
+      {
+         return aLhs->mHeuristicScore > aRhs->mHeuristicScore;
+      };
+   };
+
+private:
+
+   std::unique_ptr<SearchNode> mInitialNodePtr;
+   std::unordered_set<Board> mExplored;
+   std::priority_queue<SearchNode*, std::deque<SearchNode*>, Compare> mFrontier;
 };
 
 #endif

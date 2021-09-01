@@ -55,6 +55,8 @@ int main(int argc, char* argv[])
       solver = std::make_unique<IterativeDeepeningDepthFirstTreeSearchSolver>(initial);
       break;
    case 'g':
+      solver = std::make_unique<GreedyBestFirstGraphSearchSolver>(initial);
+      break;
    case 'a':
    default:
       std::cout << "wriggle: solver not implemented yet, exiting" << std::endl;

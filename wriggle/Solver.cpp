@@ -146,3 +146,57 @@ Solver::SearchNode* IterativeDeepeningDepthFirstTreeSearchSolver::SolveToDepth(c
 
    return nullptr;
 }
+
+void GreedyBestFirstGraphSearchSolver::Solve()
+{
+   mInitialNodePtr = std::make_unique<SearchNode>(nullptr, Board::Move{}, *mInitialPtr);
+   mFrontier.push(mInitialNodePtr.get());
+
+   SearchNode* currentPtr = nullptr;
+   while (!mFrontier.empty())
+   {
+      currentPtr = mFrontier.top();
+      mFrontier.pop();
+
+      if (currentPtr->mBoardPtr->IsSolved())
+      {
+         mSolved = true;
+         break;
+      }
+      else if (mExplored.count(*currentPtr->mBoardPtr))
+      {
+         continue;
+      }
+
+      mExplored.insert(*currentPtr->mBoardPtr);
+      std::vector<Board::Move> movesFromCurrent = currentPtr->mBoardPtr->LegalMoves();
+      for (const auto& move : movesFromCurrent)
+      {
+         auto nextNode = std::make_unique<SearchNode>(currentPtr, move, *currentPtr->mBoardPtr);
+         nextNode->mBoardPtr->MakeMove(move);
+         mFrontier.push(nextNode.get());
+         currentPtr->mChildren[move] = std::move(nextNode);
+      }
+   }
+
+   if (mSolved && currentPtr)
+   {
+      mSolvedPtr = std::make_unique<Board>(*currentPtr->mBoardPtr);
+      while (currentPtr->mParentPtr)
+      {
+         mMoves.push_front(currentPtr->mParentMove);
+         currentPtr = static_cast<GreedyBestFirstGraphSearchSolver::SearchNode*>(currentPtr->mParentPtr);
+      }
+   }
+}
+
+int GreedyBestFirstGraphSearchSolver::Heuristic(const GreedyBestFirstGraphSearchSolver::SearchNode* aSearchNodePtr)
+{
+   // simple heuristic:
+   // depth + distance to exit of closest snake end
+   const Location& exitLoc = aSearchNodePtr->mBoardPtr->GetExitLocation();
+   Location diffHead = exitLoc - aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Head);
+   Location diffTail = exitLoc - aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Tail);
+
+   return std::min(diffHead.Taxicab(), diffTail.Taxicab());
+}

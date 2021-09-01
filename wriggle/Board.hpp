@@ -31,6 +31,7 @@ public:
    bool IsLocationInside(const Location& aLocation) const;
 
    const Location& GetSnakePartLocation(const int aSnakeIdx, const Snake::SnakePart aSnakePart) const;
+   const Location& GetExitLocation() const;
 
    bool IsSolved() const;
 
