@@ -2,6 +2,7 @@
 #include "Solver.hpp"
 
 #include <array>
+#include <iostream>
 
 void Solver::Exec()
 {
@@ -9,9 +10,7 @@ void Solver::Exec()
    system_clock::time_point start = system_clock::now();
    this->Solve();
    system_clock::time_point end = system_clock::now();
-   auto elapsed = std::chrono::duration_cast<wall_time>(end - start);
-
-   mWallTime = elapsed;
+   mWallTime = std::chrono::duration_cast<wall_time>(end - start);
 }
 
 void Solver::PrintToStream(std::ostream& aOut) const
@@ -187,7 +186,7 @@ void GreedyBestFirstGraphSearchSolver::Solve()
       while (currentPtr->mParentPtr)
       {
          mMoves.push_front(currentPtr->mParentMove);
-         currentPtr = static_cast<GreedyBestFirstGraphSearchSolver::SearchNode*>(currentPtr->mParentPtr);
+         currentPtr = dynamic_cast<GreedyBestFirstGraphSearchSolver::SearchNode*>(currentPtr->mParentPtr);
       }
    }
 }
@@ -206,15 +205,13 @@ int GreedyBestFirstGraphSearchSolver::Heuristic(const GreedyBestFirstGraphSearch
 void AStarSolver::Solve()
 {
    mInitialNodePtr = std::make_unique<SearchNode>(nullptr, Board::Move{}, *mInitialPtr);
-   mFrontier.insert({ mInitialNodePtr->mHeuristicScore, mInitialNodePtr.get() });
+   mFrontier.push(mInitialNodePtr.get());
 
    SearchNode* currentPtr = nullptr;
-   std::multimap<int, SearchNode*, std::less<int>, std::allocator<FrontierItem>>::iterator currentIt;
    while (!mFrontier.empty())
    {
-      currentIt = mFrontier.begin();
-      currentPtr = currentIt->second;
-      mFrontier.erase(currentIt);
+      currentPtr = mFrontier.top();
+      mFrontier.pop();
 
       if (currentPtr->mBoardPtr->IsSolved())
       {
@@ -232,7 +229,7 @@ void AStarSolver::Solve()
       {
          auto nextNode = std::make_unique<SearchNode>(currentPtr, move, *currentPtr->mBoardPtr);
          nextNode->mBoardPtr->MakeMove(move);
-         mFrontier.insert({ nextNode->mHeuristicScore, nextNode.get() });
+         mFrontier.push(nextNode.get());
          currentPtr->mChildren[move] = std::move(nextNode);
       }
    }
@@ -243,7 +240,7 @@ void AStarSolver::Solve()
       while (currentPtr->mParentPtr)
       {
          mMoves.push_front(currentPtr->mParentMove);
-         currentPtr = static_cast<AStarSolver::SearchNode*>(currentPtr->mParentPtr);
+         currentPtr = dynamic_cast<AStarSolver::SearchNode*>(currentPtr->mParentPtr);
       }
    }
 }
@@ -256,10 +253,10 @@ int AStarSolver::Heuristic(const AStarSolver::SearchNode* aSearchNodePtr)
    const Location& headLoc = aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Head);
    const Location& tailLoc = aSearchNodePtr->mBoardPtr->GetSnakePartLocation(0, Snake::SnakePart::Tail);
 
-   auto FindExtraCost = [aSearchNodePtr](const Location& aLoc) -> int
+   auto SnakePartPenalty = [aSearchNodePtr](const Location& aLoc) -> int
    {
       const std::array<Location, 2> downright = { aLoc.Nudge(Direction::Down), aLoc.Nudge(Direction::Right) };
-      int extra = 2;
+      int penalty = 2;
 
       for (const auto& next : downright)
       {
@@ -269,18 +266,61 @@ int AStarSolver::Heuristic(const AStarSolver::SearchNode* aSearchNodePtr)
          }
          else if (aSearchNodePtr->mBoardPtr->IsLocationOccupiedBySnake(next))
          {
-            extra = std::min(extra, 1);
+            penalty = std::min(penalty, 1);
          }
          else if (aSearchNodePtr->mBoardPtr->IsLocationEmpty(next))
          {
-            extra = 0;
+            penalty = 0;
          }
       }
-      return extra;
+      return penalty;
    };
 
-   int costHead = (exitLoc - headLoc).Taxicab() + FindExtraCost(headLoc);
-   int costTail = (exitLoc - tailLoc).Taxicab() + FindExtraCost(tailLoc);
+   int costHead = (exitLoc - headLoc).Taxicab() + SnakePartPenalty(headLoc);
+   int costTail = (exitLoc - tailLoc).Taxicab() + SnakePartPenalty(tailLoc);
+   int subtotalCost = std::min(costHead, costTail);
+   
+   const Location& closerPart = subtotalCost == costHead ? headLoc : tailLoc;
 
-   return std::min(costHead, costTail) + aSearchNodePtr->mDepth;
+   // adds penalty of 1 for each layer of blockage in front of the exit
+   auto BlockedExitPenalty = [aSearchNodePtr, closerPart, exitLoc]() -> int
+   {
+      int totalPenalty = 0;
+      int sweepPenalty = 0;
+      int nudge = 0;
+      Location checkLoc;
+
+      while (nudge < exitLoc.Taxicab())
+      {
+         sweepPenalty = 1;
+         nudge++;
+         checkLoc = exitLoc - Location{ nudge, 0 };
+
+         while (checkLoc.GetX() <= exitLoc.GetX())
+         {
+            if (checkLoc == closerPart)
+            {
+               // we reached the closer part of the goal snake, immediately return result
+               return totalPenalty;
+            }
+            if (aSearchNodePtr->mBoardPtr->IsLocationEmpty(checkLoc) && aSearchNodePtr->mBoardPtr->IsLocationInside(checkLoc))
+            {
+               // this location is empty, sweep penalty is zero
+               sweepPenalty = 0;
+            }
+
+            checkLoc += Location::Up + Location::Right;
+         }
+
+         totalPenalty += sweepPenalty;
+         if (sweepPenalty == 0)
+         {
+            break;
+         }
+      }
+
+      return totalPenalty;
+   };
+
+   return subtotalCost + BlockedExitPenalty();
 }

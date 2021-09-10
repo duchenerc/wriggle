@@ -143,10 +143,9 @@ size_t Board::Hash() const
    size_t hash = 0;
    for (const auto& snake : mSnakes)
    {
-      hash = snake.Hash() ^ (hash << 12);
+      hash = snake.Hash() ^ (hash << 9);
    }
-
-   return hash;
+   return std::hash<size_t>{}(hash);
 }
 
 bool Board::operator==(const Board& aRhs) const

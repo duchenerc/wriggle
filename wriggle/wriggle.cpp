@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
       bool valid = false;
       do
       {
-         std::cout << "wriggle: choose solver ([b]fts|[i]ddfts|[g]bfgs|[a]star): ";
+         std::cout << "wriggle: choose solver ([b]fts|[i]ddfts|[g]bfgs|[a]star): " << std::flush;
          std::cin >> solverChoice;
          if (solverChoice.empty())
          {

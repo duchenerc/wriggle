@@ -62,6 +62,8 @@ protected:
          , mDepth{ mParentPtr ? mParentPtr->mDepth + 1 : 0 }
       {}
 
+      virtual ~SearchNode() = default;
+
       SearchNode* mParentPtr;
       Board::Move mParentMove;
       std::unique_ptr<Board> mBoardPtr;
@@ -137,6 +139,8 @@ protected:
          , mHeuristicScore{ Heuristic(this) }
       {}
 
+      virtual ~SearchNode() = default;
+
       int mHeuristicScore;
    };
 
@@ -154,7 +158,7 @@ private:
 
    std::unique_ptr<SearchNode> mInitialNodePtr;
    std::unordered_set<Board> mExplored;
-   std::priority_queue<SearchNode*, std::deque<SearchNode*>, Compare> mFrontier;
+   std::priority_queue<SearchNode*, std::vector<SearchNode*>, Compare> mFrontier;
 };
 
 class AStarSolver : public Solver
@@ -178,27 +182,26 @@ protected:
          , mHeuristicScore{ Heuristic(this) }
       {}
 
+      virtual ~SearchNode() = default;
+
       int mHeuristicScore;
    };
 
-   struct FrontierItem
-   {
-      FrontierItem(const int aHeuristicScore, SearchNode* aSearchNodePtr)
-         : mHeuristicScore{ aHeuristicScore }
-         , mSearchNodePtr{ aSearchNodePtr }
-      {}
-
-      const int mHeuristicScore;
-      SearchNode* mSearchNodePtr;
-   };
-
    static int Heuristic(const SearchNode* aSearchNodePtr);
+
+   struct Compare
+   {
+      bool operator()(const SearchNode* aLhs, const SearchNode* aRhs) const
+      {
+         return aLhs->mHeuristicScore + aLhs->mDepth > aRhs->mHeuristicScore + aRhs->mDepth;
+      }
+   };
 
 private:
 
    std::unique_ptr<SearchNode> mInitialNodePtr;
    std::unordered_set<Board> mExplored;
-   std::multimap<int, SearchNode*, std::less<int>, std::allocator<FrontierItem>> mFrontier;
+   std::priority_queue<SearchNode*, std::vector<SearchNode*>, Compare> mFrontier;
 };
 
 #endif

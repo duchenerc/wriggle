@@ -43,9 +43,12 @@ void Snake::MakeMove(const Snake::SnakePart aPart, const Direction aDirection)
 
 size_t Snake::Hash() const
 {
-   size_t hashHead = GetPartLocation(SnakePart::Head).Hash();
-   size_t hashTail = GetPartLocation(SnakePart::Tail).Hash();
-   return hashHead ^ (hashTail << 6);
+   size_t hash = 0;
+   for (const auto& segment : mBody)
+   {
+      hash = segment.Hash() ^ (hash << 6);
+   }
+   return std::hash<size_t>{}(hash);
 }
 
 bool Snake::operator==(const Snake& aRhs) const

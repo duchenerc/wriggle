@@ -62,10 +62,10 @@ Location Location::Nudge(const Direction aDir) const
 
 int Location::Taxicab() const
 {
-   return mX + mY;
+   return std::abs(mX + mY);
 }
 
 size_t Location::Hash() const
 {
-   return mX ^ (mY << 3);
+   return std::hash<int>{}(mX ^ (mY << 3));
 }
